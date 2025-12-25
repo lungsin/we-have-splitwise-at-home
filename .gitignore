@@ -1,0 +1,4 @@
+# Build and executables
+.build
+main
+splitbill
