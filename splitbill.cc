@@ -25,7 +25,7 @@ std::vector<Transaction> solve(std::vector<long long> const &net) {
       continue;
     if (val < 0)
       net_neg[-val].push_back(i);
-    else
+    else if (val > 0)
       net_pos[val].push_back(i);
   }
 
@@ -65,13 +65,15 @@ std::vector<Transaction> solve(std::vector<long long> const &net) {
     int transaction_count = std::min(ids_from.size(), ids_to.size());
     // Match the largest values
     for (int i = 0; i < transaction_count; ++i) {
-      result.push_back({ids_from.back(), ids_to.back(), transaction_val});
+      auto id_from = ids_from.back();
+      auto id_to = ids_to.back();
+      result.push_back({id_from, id_to, transaction_val});
       ids_from.pop_back();
       ids_to.pop_back();
       if (val_from < val_to)
-        net_pos[val_to - val_from].push_back(ids_to.back());
+        net_pos[val_to - val_from].push_back(id_to);
       else if (val_to < val_from)
-        net_neg[val_from - val_to].push_back(ids_from.back());
+        net_neg[val_from - val_to].push_back(id_from);
     }
 
     if (ids_from.empty())
@@ -88,14 +90,21 @@ std::vector<Transaction> solve(std::vector<long long> const &net) {
 }
 
 int main() {
+  // Random stuff
   std::random_device rd;
   std::mt19937 g(rd());
 
+  // Data parsed from the input
+  //  - name_to_id: mapping from name to an integer id
+  //  - names: the names of the each person
+  //  - net: the net money that each person gets once the debt is settled
   std::unordered_map<std::string, int> name_to_id;
   std::vector<std::string> names;
   std::vector<long long> net;
 
-  auto insert_name = [&](std::string const &name) -> int {
+  // A subroutine to register a new name the the data structures above
+  // Returns the int id that represents that new name
+  auto register_name = [&](std::string const &name) -> int {
     if (not name_to_id.count(name)) {
       int id = names.size();
       names.push_back(name);
@@ -106,7 +115,8 @@ int main() {
     return name_to_id[name];
   };
 
-  for (std::string s; std::getline(std::cin, s);) {
+  // Input parsing routine
+  for (std::string s; std::getline(std::cin, s) && s.size();) {
     std::stringstream ss(s);
     std::string name;
     std::vector<int> froms;
@@ -117,7 +127,7 @@ int main() {
       if (name == "->") {
         double money_float;
         ss >> name >> money_float;
-        to = insert_name(name);
+        to = register_name(name);
 
         // Convert the money to 64bit integer with its value rounded down to
         // nearest cent. Operating money with integer is better because we
@@ -125,7 +135,7 @@ int main() {
         money = money_float * 100;
         break;
       }
-      froms.push_back(insert_name(name));
+      froms.push_back(register_name(name));
     }
 
     net[to] += money;
@@ -139,10 +149,10 @@ int main() {
     }
   }
 
-  // Solver
+  // Run the solver to get a good-enough transaction list.
   auto transactions = solve(net);
 
-  // Pretty print with indentation
+  // Pretty print the transactions with indentation
   size_t max_from_name_len = 0;
   size_t max_to_name_len = 0;
   int max_value_len = 0;
@@ -158,7 +168,7 @@ int main() {
   }
   for (auto const &t : transactions) {
     printf("%*s -> %-*s : %*.2lf\n", (int)max_from_name_len,
-           names[t.from].c_str(), (int)max_from_name_len, names[t.to].c_str(),
+           names[t.from].c_str(), (int)max_to_name_len, names[t.to].c_str(),
            max_value_len, (double)t.value / 100.0);
   }
 

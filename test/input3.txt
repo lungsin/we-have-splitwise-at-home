@@ -1,0 +1,3 @@
+alice -> bob 100
+bob -> jack 10
+bob -> charlie 100
