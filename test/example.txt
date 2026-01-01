@@ -1,0 +1,19 @@
+# alice owes bob 100
+alice -> bob 100
+
+# bob and charlie owes alice 50 each (alice is not included in the split, so each person owes 100 / 2)
+bob charlie -> alice 100
+
+# alice, bob, and charlie owes daniel 25 each
+# (daniel is included in the split calculation, so each person owes 100 / 4)
+alice bob charlie daniel -> daniel 100
+
+# line which doesn't adhere to the format is ignored
+This is splitwise at home
+A splitbill cli program to simplify settlement
+
+# also note that multiline doesn't work, so the following two lines are IGNORED
+alice bob
+    -> charlie 100
+
+# once you're done inputing, you can use the shortcut to indicate EOF: Ctrl+D for linux and Ctrl+Z for windows

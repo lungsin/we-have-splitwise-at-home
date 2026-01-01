@@ -88,16 +88,16 @@ parse_input :: () -> (name_to_id : Table(string, int), names : [..]string, net :
     names : [..]string;
     net : [..]s64;
 
-    register_name :: (name_to_id : *Table, names : *[..]string, net : *[..]int, name_ori : string) -> int {
+    register_name :: (name_ori : string) -> int #expand {
         name := copy_string(name_ori);
-        found, id := table_find(name_to_id, name); 
+        found, id := table_find(*`name_to_id, name); 
         if found {
             return id; 
         }
-        id_ptr := table_add(name_to_id, name, name_to_id.count);
+        id_ptr := table_add(*`name_to_id, name, `name_to_id.count);
         id = id_ptr.*;
-        array_add(names, name);
-        array_add(net, 0);
+        array_add(*`names, name);
+        array_add(*`net, 0);
         return id;
     }
 
@@ -109,25 +109,36 @@ parse_input :: () -> (name_to_id : Table(string, int), names : [..]string, net :
 
         froms : [..]int;
         froms.allocator = temp;
+
+        froms_str : [..]string;
+        froms_str.allocator = temp;
         defer reset_temporary_storage();
 
-        // Parse lhs: space separated names representing the money from
+        // Parse lhs: space separated names representing who needs to pay for the bill
         while true {
             name:, success:, line = string_to_non_space(line);
-            if !success break line_loop;
-            if name == "->" break;
-            id := register_name(*name_to_id, *names, *net, name);
-            array_add(*froms, id);
+            if !success continue line_loop;
+            if name == "->"{
+                if froms_str.count == 0 continue line_loop;
+                break;
+            }
+            array_add(*froms_str, name);
         }
-        
-        // Parse rhs: destination name followed by the money amount
+        // Parse rhs: payer name followed by the money amount
         name:, success:, line = string_to_non_space(line);
-        if !success break;
-        to := register_name(*name_to_id, *names, *net, name);
+        if !success continue;
+        to_str := name;
 
         // We use int for all the calculation to avoid weird floating error
         money_float:, success, line = string_to_float(line);
+        if !success continue;
         money : int = cast(int)(money_float * 100);
+
+        for froms_str {
+            id := register_name(it);
+            array_add(*froms, id);
+        }
+        to := register_name(to_str);
 
         // Distibute the money
         net[to] += money;
@@ -137,7 +148,7 @@ parse_input :: () -> (name_to_id : Table(string, int), names : [..]string, net :
             // distribute the remainder of the money randomly
             // hence the purpose of the random_shuffle above
             if it_index < money % froms.count {
-                net[it] += 1;
+                net[it] -= 1;
             }
         }
     }
@@ -145,7 +156,7 @@ parse_input :: () -> (name_to_id : Table(string, int), names : [..]string, net :
     // A little validation on net: its sum must be zero
     net_sum := 0;
     for net net_sum += it; 
-    assert(net_sum == 0);
+    assert(net_sum == 0, sprint("net_sum should be zero, actual: %\n", net_sum));
 
     return name_to_id, names, net;
 }
@@ -238,6 +249,16 @@ solve :: (net : []int) -> []Transaction {
 
         check_and_remove_exact_match(money_remaining);
     }
+
+    // a little validation logic
+    net_result : [..]int;
+    net_result.allocator = temp;
+    array_resize(*net_result, net.count);
+    for transactions {
+        net_result[it.from] -= it.value;
+        net_result[it.to] += it.value;
+    } 
+    for 0..net.count - 1 assert(net[it] == net_result[it]);
     return transactions;
 }
 

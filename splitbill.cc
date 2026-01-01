@@ -86,6 +86,14 @@ std::vector<Transaction> solve(std::vector<long long> const &net) {
   }
   assert(net_pos.empty() && net_neg.empty());
 
+  // a little validation on the result
+  std::vector<long long> net_result(net.size(), 0LL);
+  for (auto t : result) {
+    net_result[t.from] -= t.value;
+    net_result[t.to] += t.value;
+  }
+  assert(net == net_result);
+
   return result;
 }
 
@@ -116,33 +124,39 @@ int main() {
   };
 
   // Input parsing routine
-  for (std::string s; std::getline(std::cin, s) && s.size();) {
+  for (std::string s; std::getline(std::cin, s);) {
     std::stringstream ss(s);
     std::string name;
+    std::vector<std::string> froms_str;
     std::vector<int> froms;
     int to = -1;
     long long money = 0;
 
     while (ss >> name) {
-      if (name == "->") {
-        double money_float;
-        ss >> name >> money_float;
-        to = register_name(name);
-
-        // Convert the money to 64bit integer with its value rounded down to
-        // nearest cent. Operating money with integer is better because we
-        // don't have to worry about weird float calculation error.
-        money = money_float * 100;
+      if (name == "->")
         break;
-      }
-      froms.push_back(register_name(name));
+      froms_str.push_back(name);
     }
+    if (froms_str.empty() || name != "->")
+      continue;
+    double money_float;
+    ss >> name >> money_float;
+    if (ss.fail())
+      continue;
+    for (auto from_name : froms_str)
+      froms.push_back(register_name(from_name));
+    to = register_name(name);
+
+    // Convert the money to 64bit integer with its value rounded down to
+    // nearest cent. Operating money with integer is better because we
+    // don't have to worry about weird float calculation error.
+    money = money_float * 100;
 
     net[to] += money;
     std::shuffle(froms.begin(), froms.end(), g);
     for (int i = 0; i < froms.size(); ++i) {
       int from = froms[i];
-      int debt = money / froms.size();
+      long long debt = money / froms.size();
       if (i < money - debt * froms.size())
         debt += 1;
       net[from] -= debt;
