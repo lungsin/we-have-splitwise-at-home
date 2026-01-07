@@ -1,0 +1,4 @@
+alice -> bob 100
+bob charlie -> alice 120
+daniel bob alice -> charlie 100
+
