@@ -97,6 +97,14 @@ std::vector<Transaction> solve(std::vector<long long> const &net) {
   return result;
 }
 
+// Cut the string after the '#' character
+std::string ignore_comment(std::string const &s) {
+  auto hash_pos = s.find('#');
+  if (hash_pos != std::string::npos)
+    return s.substr(0, hash_pos);
+  return s;
+}
+
 int main() {
   // Random stuff
   std::random_device rd;
@@ -125,6 +133,7 @@ int main() {
 
   // Input parsing routine
   for (std::string s; std::getline(std::cin, s);) {
+    s = ignore_comment(s);
     std::stringstream ss(s);
     std::string name;
     std::vector<std::string> froms_str;

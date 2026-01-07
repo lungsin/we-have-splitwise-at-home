@@ -83,6 +83,12 @@ random_shuffle :: (arr : []$T) {
     }
 }
 
+ignore_comment_in_string :: (s : string) -> string {
+    idx := find_index_from_left(s, #char "#");
+    if idx == -1 return s;
+    return slice(s, 0, idx);
+}
+
 parse_input :: () -> (name_to_id : Table(string, int), names : [..]string, net : [..]s64) {
     name_to_id : Table(string, int);
     names : [..]string;
@@ -105,7 +111,10 @@ parse_input :: () -> (name_to_id : Table(string, int), names : [..]string, net :
         line := read_line_from_stdin();
         original_line := line;
         defer free(original_line);
+        // check for EOF
         if line.count == 0 break;
+
+        line = ignore_comment_in_string(line);
 
         froms : [..]int;
         froms.allocator = temp;
