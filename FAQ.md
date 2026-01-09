@@ -20,6 +20,10 @@ Fun fact: finding an optimal solution here is actually **NP-Hard**. So, no!
 
 But the current implementation is guaranteed to be at most **1.5** times the optimal solution. It's pretty good!
 
+I must say that there are other polynomial algorithm in the literature with better approximation bound. 
+However, the runtime is quite impractical; there's a 1.25-approximation algorithm that runs in O(N^9), and a 1.2-approximation
+algorithm that runs in O(N^186).
+
 ## What's the algorithm used here?
 
 Here's a rough description of the algorithm:
